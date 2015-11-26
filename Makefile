@@ -22,14 +22,14 @@ DOCKER_ENVS := \
 # (default to no bind mount if DOCKER_HOST is set)
 # note: BINDDIR is supported for backwards-compatibility here
 BIND_DIR := $(if $(BINDDIR),$(BINDDIR),$(if $(DOCKER_HOST),,bundles))
-DOCKER_MOUNT := $(if $(BIND_DIR),-v "$(CURDIR)/$(BIND_DIR):/go/src/github.com/docker/docker/$(BIND_DIR)")
+DOCKER_MOUNT := $(if $(BIND_DIR),-v "$(CURDIR)/$(BIND_DIR):/go/src/github.com/docker/docker/$(BIND_DIR)") -v "$(CURDIR)/cache:/go/pkg"
 
 
 GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
 DOCKER_IMAGE := docker-dev$(if $(GIT_BRANCH),:$(GIT_BRANCH))
 DOCKER_DOCS_IMAGE := docker-docs$(if $(GIT_BRANCH),:$(GIT_BRANCH))
 
-DOCKER_RUN_DOCKER := docker run --rm -it --privileged $(DOCKER_ENVS) $(DOCKER_MOUNT) "$(DOCKER_IMAGE)"
+DOCKER_RUN_DOCKER := docker run --rm -it --privileged $(DOCKER_ENVS) $(DOCKER_MOUNT) "$(DOCKER_IMAGE)" sh -c 'date -s "'"$$(date)"'" &&'
 
 DOCKER_RUN_DOCS := docker run --rm -it $(DOCS_MOUNT) -e AWS_S3_BUCKET -e NOCACHE
 
@@ -39,37 +39,37 @@ GITCOMMIT := $(shell git rev-parse --short HEAD 2>/dev/null)
 default: binary
 
 all: build
-	$(DOCKER_RUN_DOCKER) hack/make.sh
+	$(DOCKER_RUN_DOCKER)' hack/make.sh'
 
 binary: build
-	$(DOCKER_RUN_DOCKER) hack/make.sh binary
+	$(DOCKER_RUN_DOCKER)' hack/make.sh binary'
 
 cross: build
-	$(DOCKER_RUN_DOCKER) hack/make.sh binary cross
+	$(DOCKER_RUN_DOCKER)' hack/make.sh binary cross'
 
 deb: build
-	$(DOCKER_RUN_DOCKER) hack/make.sh binary build-deb
+	$(DOCKER_RUN_DOCKER)' hack/make.sh binary build-deb'
 
 rpm: build
-	$(DOCKER_RUN_DOCKER) hack/make.sh binary build-rpm
+	$(DOCKER_RUN_DOCKER)' hack/make.sh binary build-rpm'
 
 test: build
-	$(DOCKER_RUN_DOCKER) hack/make.sh binary cross test-unit test-integration-cli test-docker-py
+	$(DOCKER_RUN_DOCKER)' hack/make.sh binary cross test-unit test-integration-cli test-docker-py'
 
 test-unit: build
-	$(DOCKER_RUN_DOCKER) hack/make.sh test-unit
+	$(DOCKER_RUN_DOCKER)' hack/make.sh test-unit'
 
 test-integration-cli: build
-	$(DOCKER_RUN_DOCKER) hack/make.sh binary test-integration-cli
+	$(DOCKER_RUN_DOCKER)' hack/make.sh binary test-integration-cli'
 
 test-docker-py: build
-	$(DOCKER_RUN_DOCKER) hack/make.sh binary test-docker-py
+	$(DOCKER_RUN_DOCKER)' hack/make.sh binary test-docker-py'
 
 validate: build
-	$(DOCKER_RUN_DOCKER) hack/make.sh validate-dco validate-gofmt validate-pkg validate-lint validate-test validate-toml validate-vet
+	$(DOCKER_RUN_DOCKER)' hack/make.sh validate-dco validate-gofmt validate-pkg validate-lint validate-test validate-toml validate-vet'
 
 shell: build
-	$(DOCKER_RUN_DOCKER) bash
+	$(DOCKER_RUN_DOCKER)' bash'
 
 build: bundles
 	docker build -t "$(DOCKER_IMAGE)" .
