@@ -36,7 +36,6 @@ import (
 	"strings"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/docker/docker/daemon/graphdriver"
@@ -405,8 +404,6 @@ func (m mountOptsTooLong) Error() string {
 	return string(m)
 }
 
-var count = 0
-
 func (d *Driver) mountrw(id string, layers []string, mountLabel string) error {
 	logrus.Debugf("mounting rw %v %v %v", id, layers, mountLabel)
 	upperDir := d.dir(diffPath, id)
@@ -437,12 +434,6 @@ func (d *Driver) mountrw(id string, layers []string, mountLabel string) error {
 		return err
 	}
 	logrus.Debugf("success %s", mergedDir)
-	if len(mntOpts) == 1362 {
-		count++
-		if count == 2 {
-			time.Sleep(10 * time.Minute)
-		}
-	}
 	return nil
 }
 
